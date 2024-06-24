@@ -1,8 +1,9 @@
 from datetime import datetime
+from time import sleep
 
 from PyQt5 import uic
 from PyQt5.QtCore import Qt, QObject, QDateTime, QTimer
-from PyQt5.QtGui import QIcon, QFont, QIntValidator
+from PyQt5.QtGui import QIcon, QFont, QIntValidator, QPainter, QColor
 from PyQt5.QtWidgets import QLabel, QPushButton, QDesktopWidget, QHBoxLayout, QVBoxLayout, QSpinBox, QComboBox, \
     QWidget, QFrame, QRadioButton, QLineEdit, QMessageBox, QCheckBox, QGridLayout, QGroupBox, QTabWidget, QSizePolicy, \
     QTableWidget, QTextEdit, QDateTimeEdit, QSlider, QScrollBar, QDial, QProgressBar
@@ -10,9 +11,17 @@ from PyQt5.QtWidgets import QLabel, QPushButton, QDesktopWidget, QHBoxLayout, QV
 from queue import Queue
 
 from MainCode import path
-from app.database.api.api import get_all_module
+from app.acc_meter.model.AccMeterModel import AccMeterModel
+from app.controller.model.ControllerModel import ControllerModel
+from app.database.api.api import get_all_module, get_module_model, get_device_by_id
+from app.gnd_center.model.GNDCenterModel import GNDCenterModel
+from app.inverter.iG5A.iG5AModel_new import iG5AModel
 from app.inverter.ui.iG5A_ui_model import iG5A_UI
+from app.motor.model.MotorModel import MotorModel
+from app.plant.model.PlantModel import PlantModel
+from app.speed_meter.model.SpeedMeterModel import SpeedMeterModel
 from core.model.SplashScreen import SplashScreen
+from core.theme.style.style import close_pb_style
 
 
 class MainUi(QFrame):
@@ -23,7 +32,45 @@ class MainUi(QFrame):
     onlyInt: QIntValidator = QIntValidator(1, 100)
     tab_main: QWidget
 
-    telegram_send_queue: Queue[list[int, str]]
+    start_service_pb: QPushButton
+    stop_service_pb: QPushButton
+    close_pb: QPushButton
+
+    main_logo_label: QLabel
+    setting_logo_label: QLabel
+
+    gnd_inv_line: QFrame
+    inv_motor_line: QFrame
+    motor_plan_line: QFrame
+    plan_acc_line: QFrame
+    acc_cnt_line: QFrame
+    acc_cnt_2_line: QFrame
+    spd_cnt_line: QFrame
+    motor_spd_line: QFrame
+    inv_cnt_2_line: QFrame
+    inv_cnt_line: QFrame
+
+    gnd_center_ui_pb: QPushButton
+    inverter_ui_pb: QPushButton
+    motor_ui_pb: QPushButton
+    plan_ui_pb: QPushButton
+    acc_meter_ui_pb: QPushButton
+    spd_meter_ui_pb: QPushButton
+    controller_ui_pb: QPushButton
+
+    motor: MotorModel
+    gnd_center: GNDCenterModel
+    plant: PlantModel
+    acc_meter: AccMeterModel
+    speed_meter: SpeedMeterModel
+    controller: ControllerModel
+
+    module: iG5AModel
+
+    # TODO:in bayad besheb grid fekr konam bayad checkesh konam
+    verticalLayout_inverter: QVBoxLayout
+
+    # telegram_send_queue: Queue[list[int, str]]
 
     def __init__(self):
         super(MainUi, self).__init__()
@@ -62,13 +109,46 @@ class MainUi(QFrame):
         self.tab_main = self.findChild(QWidget, "Main")
         self.tab_trade_status = self.findChild(QWidget, "trade_status")
         self.tab_setting = self.findChild(QWidget, "Setting")
+        self.start_service_pb = self.findChild(QPushButton, "start_service_pb")
+        self.stop_service_pb = self.findChild(QPushButton, "stop_service_pb")
+
+        self.main_logo_label = self.findChild(QLabel, "main_logo_label")
+        self.setting_logo_label = self.findChild(QLabel, "setting_logo_label")
+
+        self.gnd_inv_line = self.findChild(QFrame, "gnd_inv_line")
+        self.inv_motor_line = self.findChild(QFrame, "inv_motor_line")
+        self.motor_plan_line = self.findChild(QFrame, "motor_plan_line")
+        self.plan_acc_line = self.findChild(QFrame, "plan_acc_line")
+        self.acc_cnt_line = self.findChild(QFrame, "acc_cnt_line")
+        self.acc_cnt_2_line = self.findChild(QFrame, "acc_cnt_2_line")
+        self.spd_cnt_line = self.findChild(QFrame, "spd_cnt_line")
+        self.motor_spd_line = self.findChild(QFrame, "motor_spd_line")
+        self.inv_cnt_2_line = self.findChild(QFrame, "inv_cnt_2_line")
+        self.inv_cnt_line = self.findChild(QFrame, "inv_cnt_line")
+
+        self.gnd_center_ui_pb = self.findChild(QPushButton, "gnd_center_ui_pb")
+        self.inverter_ui_pb = self.findChild(QPushButton, "inverter_ui_pb")
+        self.motor_ui_pb = self.findChild(QPushButton, "motor_ui_pb")
+        self.plan_ui_pb = self.findChild(QPushButton, "plan_ui_pb")
+        self.acc_meter_ui_pb = self.findChild(QPushButton, "acc_meter_ui_pb")
+        self.spd_meter_ui_pb = self.findChild(QPushButton, "spd_meter_ui_pb")
+        self.controller_ui_pb = self.findChild(QPushButton, "controller_ui_pb")
+
+        self.verticalLayout_inverter: QVBoxLayout = self.findChild(QVBoxLayout, "verticalLayout_inverter")
+
+        self.motor = MotorModel()
+        self.gnd_center = GNDCenterModel()
+        self.plant = PlantModel()
+        self.acc_meter = AccMeterModel()
+        self.speed_meter = SpeedMeterModel()
+        self.controller = ControllerModel()
 
         #   Start Colors
         from core.theme.color.color import tab_selected_bg_color, tab_selected_text_color
 
-        from core.theme.style.style import active_pb_style, label_style, start_trading_pb_style, stop_trading_pb_style, \
+        from core.theme.style.style import active_pb_style, label_style, \
             balance_label_style, line_edit_style, line_edit_prop_style, optimal_strategy_rb_style, \
-            optimal_strategy_label_style
+            optimal_strategy_label_style, ui_line_style, start_service_pb_style, stop_service_pb_style
 
         # stylesheet = "QTabBar::tab:selected {background-color: " + tab_selected_bg_color + ";" + \
         #              "color: " + tab_selected_text_color + ";font-size: 8pt;}" + \
@@ -90,31 +170,29 @@ class MainUi(QFrame):
 
         #   End Colors
 
-        modules = get_all_module()
-
+        # modules = get_all_module()
+        self.module = get_device_by_id(1)
         # trades.remove(get_trading(12))
         # trades = [get_trading(11)]
 
-        self.add_module_to_threads(modules)
+        # self.add_module_to_threads(modules)
+
         # # self.start_trade_threads()
         #
         # self.main_trading_thread = MainTradingThreadModel(self.trade_threads)
-        #
-        # self.logo_label_setting = self.findChild(QLabel, "logo_label_setting")
-        # self.main_logo_label = self.findChild(QLabel, "Main_Logo_label")
-        #
-        # self.logo_label_setting.setPixmap(Pics.Logo)
-        # self.main_logo_label.setPixmap(Pics.Logo)
-        #
+
+        self.setting_logo_label.setPixmap(Pics.Logo)
+        self.main_logo_label.setPixmap(Pics.Logo)
+
         # self.open_trade_window_pb = self.findChild(QPushButton, "open_trade_window_pb")
         # data_connector = DataConnector()
         # self.open_trade_window_pb.clicked.connect(lambda: data_connector.open_trade_window())
         #
         # self.open_trade_window_pb.setStyleSheet(active_pb_style)
-        #
-        # self.close_pb = self.findChild(QPushButton, "close_pb")
-        # self.close_pb.setStyleSheet(close_pb_style)
-        #
+
+        self.close_pb = self.findChild(QPushButton, "close_pb")
+        self.close_pb.setStyleSheet(close_pb_style)
+
         # self.go_to_account_pb = self.findChild(QPushButton, "go_to_account_pb")
         # self.go_to_account_pb.setStyleSheet(active_pb_style)
         #
@@ -124,16 +202,33 @@ class MainUi(QFrame):
         #
         # self.open_instructions_label = self.findChild(QLabel, "open_instructions_label")
         # self.open_instructions_label.setStyleSheet(label_style)
-        #
-        # self.start_trading_pb = self.findChild(QPushButton, "start_trading_pb")
-        # self.start_trading_pb.setStyleSheet(start_trading_pb_style)
-        # self.start_trading_pb.clicked.connect(self.main_trading_start_thread)
-        #
-        # self.stop_trading_pb = self.findChild(QPushButton, "stop_trading_pb")
-        # self.stop_trading_pb.setStyleSheet(stop_trading_pb_style)
-        # self.stop_trading_pb.hide()
-        # self.stop_trading_pb.clicked.connect(self.main_trading_stop_thread)
-        #
+
+        self.start_service_pb.setStyleSheet(start_service_pb_style)
+        self.start_service_pb.clicked.connect(self.main_service_start_thread)
+
+        self.stop_service_pb.setStyleSheet(stop_service_pb_style)
+        # self.stop_service_pb.hide()
+        self.stop_service_pb.clicked.connect(self.main_service_stop_thread)
+
+        self.gnd_inv_line.setStyleSheet(ui_line_style)
+        self.inv_motor_line.setStyleSheet(ui_line_style)
+        self.motor_plan_line.setStyleSheet(ui_line_style)
+        self.plan_acc_line.setStyleSheet(ui_line_style)
+        self.acc_cnt_line.setStyleSheet(ui_line_style)
+        self.acc_cnt_2_line.setStyleSheet(ui_line_style)
+        self.spd_cnt_line.setStyleSheet(ui_line_style)
+        self.motor_spd_line.setStyleSheet(ui_line_style)
+        self.inv_cnt_2_line.setStyleSheet(ui_line_style)
+        self.inv_cnt_line.setStyleSheet(ui_line_style)
+
+        self.motor.ui_setter(self.motor_ui_pb)
+        self.gnd_center.ui_setter(self.gnd_center_ui_pb)
+        self.plant.ui_setter(self.plan_ui_pb)
+        self.acc_meter.ui_setter(self.acc_meter_ui_pb)
+        self.speed_meter.ui_setter(self.spd_meter_ui_pb)
+        self.controller.ui_setter(self.controller_ui_pb)
+        self.module.ui_setter(self.inverter_ui_pb)
+
         # self.balance_comboBox = self.findChild(QComboBox, "balance_comboBox")
         # self.balance_comboBox.setStyleSheet(line_edit_style)
         # self.balance_comboBox.setCurrentIndex(1)
@@ -228,19 +323,20 @@ class MainUi(QFrame):
         #
         # self.Sensor_Status.Sensor_Submit_pb = self.Sensor_Status.findChild(QPushButton, "Sensor_Submit_pb")
 
-    def add_module_to_ui(self, name: str, value: str) -> dict[str, QLabel]:
+    def add_module_to_ui(self, module: dict) -> None:
         """
         add trade QH to vertical layout
         :param name: name
         :param value: value
         :return:
         """
-        verticalLayout_trade:QVBoxLayout = self.findChild(QVBoxLayout, "verticalLayout_inverter")
-
-        mainLayout = iG5A_UI().get_layout()
+        pass
         # verticalLayout_trade.insertWidget()
-        i = verticalLayout_trade.count()
-        verticalLayout_trade.insertWidget(i - 2, mainLayout)
+
+        # for i in reversed(range(verticalLayout_trade.count())):
+        #     widget = verticalLayout_trade.itemAt(i).widget()
+        #     verticalLayout_trade.removeWidget(widget)
+
         # h1 = QHBoxLayout()
         # # h1 = QVBoxLayout()
         #
@@ -279,26 +375,50 @@ class MainUi(QFrame):
         #         "q_label_accuracy": q_label_accuracy,
         #         "q_label_predict": q_label_predict}
 
-
-    def main_trading_start_thread(self):
+    def main_service_start_thread(self):
         """
             starting the main trade thread
         """
-        pass
+        # self.start_service_pb.hide()
+        # self.start_service_pb.setEnabled(False)
+        if not self.module.connect_flag:
+            self.module.start_com()
+        # self.module.start_com()
+        self.module.start()
+        self.motor.start()
+        self.gnd_center.start()
+        self.plant.start()
+        self.acc_meter.start()
+        self.speed_meter.start()
+        self.controller.start()
+        # if self.module.connect_flag:
+        # # self.stop_service_pb.show()
+        #     self.stop_service_pb.setEnabled(True)
+        # else:
+        #     self.stop_service_pb.setEnabled(False)
+        #     self.start_service_pb.setEnabled(True)
 
-    def main_trading_stop_thread(self):
+    def main_service_stop_thread(self):
         """
             starting the main trade thread
         """
-        self.stop_trading_pb.hide()
-        self.main_trading_thread.stop_main_thread()
-        self.start_trading_pb.show()
-        self.amount_spinBox.setEnabled(1)
-        self.time_comboBox.setEnabled(1)
-        self.balance_comboBox.setEnabled(1)
-        self.quotex_password_lineEdit.setEnabled(1)
-        self.quotex_username_lineEdit.setEnabled(1)
-        self.set_profile_pb.setEnabled(1)
+        # self.stop_service_pb.hide()
+        # self.stop_service_pb.setEnabled(False)
+        # self.main_trading_thread.stop_main_thread()
+        self.module.stop()
+
+        while self.module.read_operating_status() != 0:
+            sleep(0.1)
+        # self.module.stop_com()
+        # self.start_service_pb.setEnabled(True)
+
+        # self.start_service_pb.show()
+        # self.amount_spinBox.setEnabled(1)
+        # self.time_comboBox.setEnabled(1)
+        # self.balance_comboBox.setEnabled(1)
+        # self.quotex_password_lineEdit.setEnabled(1)
+        # self.quotex_username_lineEdit.setEnabled(1)
+        # self.set_profile_pb.setEnabled(1)
 
     def add_module_to_threads(self, modules):
         """
@@ -308,54 +428,26 @@ class MainUi(QFrame):
         self.module_threads = []
 
         for module in modules:
-            print(module)
-            q_labels = self.add_module_to_ui(module['model_id'], module['name'])
-            # self.trade_threads.append(TradingThreadModel(trade, q_labels["q_label_name"], q_labels["q_label_value"],
-            #                                              q_labels["q_label_accuracy"], q_labels["q_label_predict"]))
+            model = get_module_model(module['model_id'])
+            inv_model = model(module)
+            inv_model.ui_layout = self.verticalLayout_inverter
+            inv_model.update_ui()
+            index = self.add_module_to_ui(module)
+
+            self.module_threads.append(inv_model)
+
+        # verticalLayout_trade.insertWidget(i, mainLayout)
+
+        # # widget.setParent(None)
 
     def start_trade_threads(self):
         for trade in self.trade_threads:
             trade.start_thread()
 
     def stop_trade_threads(self, splash_screen: SplashScreen):
-        for trade in self.trade_threads:
-            trade.stop_thread = True
+        self.main_service_stop_thread()
 
         for trade in self.trade_threads:
             splash_screen.show_message("closing trade " + trade.trade.currency_disp())
             trade.thread.join()
             splash_screen.add_saved_text("trade " + trade.trade.currency_disp() + " closed!")
-
-    def balance_comboBox_change(self):
-        """
-            change balance mode
-        """
-        current_index = self.balance_comboBox.currentIndex()
-        if current_index == 0:
-            self.main_trading_thread.data_connector.change_account(0)
-        elif current_index == 1:
-            self.main_trading_thread.data_connector.change_account(1)
-        else:
-            self.main_trading_thread.data_connector.change_account(1)
-
-        self.balance_value_label.setText("$" + str(self.main_trading_thread.data_connector.get_balance()))
-
-    def show_user_pass_from_config(self):
-        from core.config.Config import get_user_pass_quotex
-        user_name_quotex, password_quotex = get_user_pass_quotex()
-        self.quotex_username_lineEdit.setText(user_name_quotex)
-        self.quotex_password_lineEdit.setText(password_quotex)
-
-    def set_profile_to_config(self):
-        from core.config.Config import set_user_pass_quotex
-        quotex_username = self.quotex_username_lineEdit.text()
-        quotex_password = self.quotex_password_lineEdit.text()
-
-        set_user_pass_quotex(quotex_username, quotex_password)
-        msg = QMessageBox()
-        msg.setWindowTitle("change username and password of quotex")
-        msg.setIcon(QMessageBox.Information)
-        msg.setText("your username and password changed successfully")
-        msg.exec_()
-
-        self.show_user_pass_from_config()

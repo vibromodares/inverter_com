@@ -16,11 +16,11 @@ balance_label_style = "background-color: " + label_text_bg + ";color: " + balanc
 active_pb_style = "QPushButton {background-color: " + pb_bg_color_active + ";" + "color: " + \
                   pb_text_color_active + ";border-radius: 7;} QPushButton:hover {background-color: #4C5569;}"
 
-start_trading_pb_style = "QPushButton {background-color: " + start_trading_pb_bg_color + ";" + "color: " + \
+start_service_pb_style = "QPushButton {background-color: " + start_trading_pb_bg_color + ";" + "color: " + \
                          pb_text_color_active + ";border-radius: 7;} QPushButton:hover {background-color: " + \
                          hover_start_trading_pb_bg_color + ";}"
 
-stop_trading_pb_style = "QPushButton {background-color: " + stop_trading_pb_bg_color + ";" + "color: " + \
+stop_service_pb_style = "QPushButton {background-color: " + stop_trading_pb_bg_color + ";" + "color: " + \
                         pb_text_color_active + ";border-radius: 7;} QPushButton:hover {background-color: " + \
                         hover_stop_trading_pb_bg_color + ";}"
 
@@ -43,3 +43,8 @@ trade_off_style = "background-color: " + trade_off_bg_color + ";color: " + trade
 login_forget_style = "background-color: " + login_forget_pb_bg + ";" + "color: " + login_forget_pb_text + ";"
 login_enter_pb_style = "background-color: " + login_enter_pb_bg + ";" + "color: " + login_enter_pb_text + \
                        ";border-radius : 5;padding-bottom: 1px;"
+
+inverter_unknown_stylesheet = "background-color: rgb(255, 85, 0);"
+inverter_disconnect_stylesheet = "background-color: rgb(255, 0, 0);"
+inverter_connect_stylesheet = "background-color: rgb(0, 255, 127);"
+ui_line_style = "color: rgb(0, 255, 127);"
