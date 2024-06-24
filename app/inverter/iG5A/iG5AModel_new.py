@@ -34,7 +34,7 @@ class iG5AModel(InverterBaseModel):
 
         self.Thread = Thread(target=self.main_thread, args=(lambda: self.stop_thread,))
 
-        self.inverter = get_module_by_id(self.inverter_id)
+        self.inverter = get_module_by_id(self.model_id)
 
         self.model = 'iG5A'
         self.ui_layout = None
