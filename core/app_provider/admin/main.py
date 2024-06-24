@@ -9,7 +9,7 @@ from MainCode import path
 # from core.config.Config import db_path, logout_time
 from core.model.MainUI import MainUi
 from core.model.SplashScreen import SplashScreen
-from core.theme.color.color import  login_line_edit_bg, login_line_edit_text, \
+from core.theme.color.color import login_line_edit_bg, login_line_edit_text, \
     login_line_edit_border, start_splash_align, start_splash_color, close_splash_align, close_splash_color, \
     start_splash_font_size, end_splash_font_size
 from core.theme.pic import Pics
@@ -30,8 +30,8 @@ class Main:
         self.close_splash.set_font(end_splash_font_size)
 
         self.start_splash.show()
-        self.State_Render = False
-        self.State_PLC = False
+        # self.State_Render = False
+        # self.State_PLC = False
         self.stopCheckThread = False
 
         self.stopCheckRender = False
@@ -62,12 +62,12 @@ class Main:
         #
         # self.start_splash.show_message("initializing DA units system")
 
-
         self.run_thread()
-
 
         self.start_splash.finish(self.main_ui)
         self.main_ui.show()
+
+        self.main_ui.close_pb.clicked.connect(self.close)
 
     def main_thread(self, stop_thread: Callable[[], bool]) -> None:
         while True:
@@ -89,16 +89,17 @@ class Main:
     def stop_all_threads(self):
         pass
 
-
     def close(self):
-        r = ""
-        if r == "Success":
-            self.close_splash.show()
-            self.close_splash.show_message("start closing")
-            self.stop_all_threads()
-            self.close_splash.finish(self.main_ui)
-            self.main_ui.close()
-            os._exit(0)
+        self.main_ui.module.stop_thread = True
+        self.main_ui.main_service_stop_thread()
+        if self.main_ui.module.Thread.is_alive():
+            self.main_ui.module.Thread.join()
+        self.close_splash.show()
+        self.close_splash.show_message("start closing")
+        self.stop_all_threads()
+        self.close_splash.finish(self.main_ui)
+        self.main_ui.close()
+        os._exit(0)
 
     @staticmethod
     def create_db_path():
