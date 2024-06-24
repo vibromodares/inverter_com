@@ -3,13 +3,8 @@ import binascii
 from time import sleep, time, time_ns
 
 
-start_char = ENQ = chr(5)
-end_char = EOT = chr(4)
-normal_response_char = ACK = chr(6)
-bad_response_char = NAK = chr(21)
-
-
 class SerialModel:
+
     def __init__(self, port: str = '') -> None:
         self.ser = serial.Serial()
         self.ser.baudrate = 9600
@@ -20,64 +15,24 @@ class SerialModel:
         self.ser.rtscts = 0
         self.ser.timeout = 0.05  # momkene to baghie system haw fargh dashte bashe bayad y hodod barash peida konim
         self.read_timeout = 1
-        self.start_char = start_char  # TODO: in bayad bere dakhele plc k azesh ino seda mizane
-        self.end_char = end_char  # TODO: in bayad bere dakhele plc k azesh ino seda mizane
         # self.open()  # TODO: in bayad bere dakhele plc k azesh ino seda mizane
 
-    def open(self) -> None:
-        self.ser.open()
+    def open(self) -> bool:
+        # if self.start_char == '':
+        #     return False
+        # if self.end_char == '':
+        #     return False
+        if self.ser.is_open:
+            return True
+        try:
+            self.ser.open()
+            return True
+        except Exception as e:
+            return False
 
-    def readSerial(self, address: str):
-        # TODO:in bayad doros she bug ziad dare aval inke bayad time out dashte bashe baadam bayad yekisho tasmim begirim bezarim
-        byte = self.code_data(address)
-
-        self.ser.write(byte)
-        # bstr = ''
-        sstr = ''
-
-        flag = False
-        start_time = time_ns()
-
-        while True:
-            mHex = self.ser.read()
-
-            if len(mHex) != 0:
-                flag = True
-                # bstr += binascii.hexlify(bytearray(mHex)).decode("utf-8")
-                # bstr += " "
-                sstr += mHex.decode("utf-8")
-
-            if len(mHex) == 0 and time_ns() - start_time > self.read_timeout * 10 ^ 9:
-                break
-
-            if len(mHex) == 0 and flag:
-                break
-
-        # TODO:bayad vase tak tak ina handle bezarim k age errori dadi befahmim
-
-        response_data, response_flag = self.decode_data(sstr)
-        id, RW, data, total = self.extract_data(response_data)
-        id, RW, address_data, total, length = self.extract_address(address)
-
-        self.convert_response_data('0x' + address_data, '0x' + data)
-
-        return self.convert_response_data('0x' + address_data, '0x' + data)
-
-    def code_data(self, data):
-        # TODO:inam fekr konam bayad bere az plc k azesh mikhonim biad
-        return bytes(self.start_char + data + self.end_char, 'utf-8')
-
-    def decode_data(self, data: str) -> tuple[str, bool]:
-        if normal_response_char in data:
-            flag = True
-        elif bad_response_char in data:
-            flag = False
-        else:
-            raise  # TODO:bayad raise ro doros konam k y error doros bede
-
-        data = data.replace(start_char, '').replace(end_char, '').replace(normal_response_char, '').replace(
-            bad_response_char, '')
-        return data, flag
+    def close(self) -> bool:
+        self.ser.close()
+        return True
 
     def convert_response_data(self, address: str, byte: str) -> str:
         pass
