@@ -20,6 +20,7 @@ class DataBaseModel:
         else:
             self.file_name = file_name
 
+        self.query = Query()
         self.DB = TinyDB(self.db_path + self.file_name).table(self.table_name)
 
     def get_response(self, model_id, address, byte):
