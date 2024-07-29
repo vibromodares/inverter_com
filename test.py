@@ -9,12 +9,13 @@
 #     'name': 'PLC',
 #     'com_disc': 'USB-SERIAL CH340'
 # })
-from time import sleep
-
+# from time import sleep
+#
 from app.database.api.api import get_device_by_id
 from app.inverter.iG5A.iG5AModel_new import iG5AModel
 from app.inverter.inverter_model import InverterBaseModel
-
+# from files.data.make_db import make_tinydb_from_excel, handle_db
+# handle_db()
 # from app.database.model.database_model import DataBaseModel
 #
 # # TODO:bayad check kone data on model inverter ra dare ya na dl kone v check kone bebine aslan in model inverter to model haye ma hast ya na
@@ -98,17 +99,29 @@ from app.inverter.inverter_model import InverterBaseModel
 #
 # app = QApplication(sys.argv)
 # from core.app_provider.admin.main import Main
-#
-# # main = Main()
-#
+
+# main = Main()
+
 # asd = get_device_by_id(1)
-# asd.start_com()
-# print('frq',asd.read_frq())
+# asd.set_serial_com('COM19')
+# print(asd.start_com())
+# print('read_name', asd.read_name())
+# print('read_test', asd.read_test())
 # asd.set_frq_ui(4.82)
 #
 # print(asd.read_name())
 # print(asd.read_capacity())
 # print(asd.read_acc_time())
+# asd.set_frq('05DC')
+# asd.start_command()
+# asd.set_frq('0640')
+# print(asd.read_serial('0305'))
+# sleep(10)
+# asd.stop_command()
+# print(asd.read_serial('0305'))
+# sleep(2)
+# print(asd.read_serial('0305'))
+
 # print(asd.read_deacc_time())
 # print('op',asd.read_operating_status())
 #

@@ -33,6 +33,7 @@ class InverterBaseModel:
         except:
             self.connect_flag = False
             return False
+
         self.connect_flag = True
         return True
 

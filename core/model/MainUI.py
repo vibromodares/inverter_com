@@ -171,8 +171,7 @@ class MainUi(QFrame):
         #   End Colors
 
         # modules = get_all_module()
-        # fekr konam bayad y drop down biad entekhab konan kodom device has
-        self.module = get_device_by_id(3)
+        self.module = get_device_by_id(1)
         # trades.remove(get_trading(12))
         # trades = [get_trading(11)]
 

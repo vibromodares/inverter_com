@@ -6,6 +6,7 @@ from time import sleep
 from PyQt5.QtWidgets import QApplication
 
 
+
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -19,6 +20,9 @@ path = resource_path("")
 path = path.replace(path[2], "/")
 
 if __name__ == "__main__":
+    from files.data.make_db import handle_db
+    handle_db()
+
     app = QApplication(sys.argv)
     from core.app_provider.admin.main import Main
 

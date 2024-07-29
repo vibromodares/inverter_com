@@ -1,6 +1,6 @@
 from typing import Union
 
-from app.database.model.database_model import DataBaseModel
+from app.database.model.database_model import DataBaseModel, DataModel
 from app.database.model.inverter_model import InverterModel
 
 device_models_db = DataBaseModel(file_name='device_models.json')
@@ -39,3 +39,8 @@ def get_module_model(model_id: int):
         return iG5AModel
 
     return None
+
+
+def get_db_by_model_id(model_id) -> DataModel:
+    database_table_name = get_module_by_id(model_id).name
+    return DataModel(database_table_name)
