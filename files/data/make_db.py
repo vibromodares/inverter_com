@@ -1,17 +1,17 @@
-import numpy as np
 import pandas as pd
 from app.database.model.database_model import DataBaseModel
 from tqdm import tqdm
 
 database_db_path = './files/data/'
 database_file_name = 'database.json'
+excel_file_name = 'iG5A_data.xlsx'
 
 import os
 
 
 def make_tinydb_from_excel():
     # TODO:y dokme mikhaim k .json ro pak kone v jadid besaze v y ui mikhaim vase editesh
-    df = pd.read_excel('files/data/iG5A_data.xlsx')
+    df = pd.read_excel(database_db_path + excel_file_name)
 
     if df['parent_id'].isnull().values.any():
         print('some parent id is nan')
@@ -56,6 +56,11 @@ def make_tinydb_from_excel():
 
     df['function'] = df['function'].fillna(value='')
 
+    df['refresh_rate'] = df['refresh_rate'].fillna(value=-1)
+    df['logging'] = df['logging'].fillna(value=0)
+
+    df['editable'] = df['editable'].fillna(value=0)
+
     # print(df)
 
     if df.isnull().values.any():
@@ -89,27 +94,35 @@ def make_tinydb_from_excel():
                 'need_update': int(temp_row['need_update']),
                 'min': int(temp_row['min']),
                 'max': int(temp_row['max']),
-                'step': int(temp_row['step']),
+                'step': float(temp_row['step']),
                 'decimal': int(temp_row['decimal']),
                 'function': str(temp_row['function']),
-
+                'refresh_rate': float(temp_row['refresh_rate']),
+                'logging': int(temp_row['logging']),
+                'editable': int(temp_row['editable']),
             }
 
             db.insert_data(data)
-
-    # print(db)
-    # db.insert_data({
-    #     'parameter_name': 'Inverter Model',
-    #     'address': '0x0300',
-    #     'byte': '0x000A',
-    #     'discreption': 'iG5A',
-    # })
 
 
 def check_db_exist() -> bool:
     return os.path.exists(database_db_path + database_file_name)
 
 
+def get_db_time() -> float:
+    return os.path.getmtime(database_db_path + database_file_name)
+
+
+def get_excel_time() -> float:
+    return os.path.getmtime(database_db_path + excel_file_name)
+
+
 def handle_db() -> None:
     if not check_db_exist():
         make_tinydb_from_excel()
+    else:
+        excel_time = get_excel_time()
+        db_time = get_db_time()
+        if excel_time > db_time:
+            os.remove(database_db_path + database_file_name)
+            make_tinydb_from_excel()

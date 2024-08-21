@@ -3,6 +3,7 @@ from typing import Union
 
 import serial
 
+from MainCode import logging_system
 from app.serial_com.serial_com_model import SerialModel
 
 
@@ -21,21 +22,24 @@ class InverterBaseModel:
 
     def start_com(self) -> bool:
         try:
+            logging_system.insert(0, "start serial com inverter " + self.serial.ser.port)
             flag = self.serial.open()
+
+            logging_system.insert(0, "start serial com inverter after " + self.serial.ser.port,
+                                  description="connect flag : " + str(flag))
             if flag:
                 self.connect_flag = True
                 return True
             self.connect_flag = False
             return False
         except serial.SerialException as e:
+            logging_system.insert(2, "start serial com inverter serial except" + self.serial.ser.port, error=str(e))
             self.connect_flag = False
             return False
-        except:
+        except Exception as e:
+            logging_system.insert(2, "start serial com inverter except" + self.serial.ser.port, error=str(e))
             self.connect_flag = False
             return False
-
-        self.connect_flag = True
-        return True
 
     def stop_com(self) -> bool:
         try:
@@ -55,6 +59,7 @@ class InverterBaseModel:
 
     def readSerial(self, address: str):
         # TODO:in bayad doros she bug ziad dare aval inke bayad time out dashte bashe baadam bayad yekisho tasmim begirim bezarim
+        logging_system.insert(0, "read serial inverter ", send_address=address)
         byte = self.code_data(address)
 
         self.serial.ser.write(byte)
@@ -67,24 +72,42 @@ class InverterBaseModel:
         while True:
             mHex = self.serial.ser.read()
 
+            if sstr == '':
+                if mHex not in [bytes(self.normal_response_char, 'utf-8'), bytes(self.bad_response_char, 'utf-8')]:
+                    print("khar miad inja123")
+                    print("mHex = " + str(mHex))
+                    logging_system.insert(2, "read serial check NRC BRC", send_address=address,
+                                          description="mHex = " + str(mHex) + " sstr = " + sstr,
+                                          error="start with bad char")
+                    break
+
             if len(mHex) != 0:
                 flag = True
-                # bstr += binascii.hexlify(bytearray(mHex)).decode("utf-8")
-                # bstr += " "
-                sstr += mHex.decode("utf-8")
 
-            if len(mHex) == 0 and time_ns() - start_time > self.serial.read_timeout * 10 ^ 9:
+                try:
+                    sstr += mHex.decode("utf-8")
+                except Exception as e:
+                    print("inverter model read serial decode to utf-8 ", e, "sstr = ", sstr, "mHex = ", mHex)
+                    logging_system.insert(2, "inverter model read serial decode to utf-8 ",
+                                          description="sstr = " + sstr, error=str(e))
+
+            if mHex == bytes(self.end_char, 'utf-8'):
                 break
 
-            # if time_ns() - start_time > self.serial.read_timeout*2 * 10 ^ 9:
-            #     break
+            if len(mHex) == 0 and time_ns() - start_time > self.serial.read_timeout * 10 ** 9:
+                break
+
+            if time_ns() - start_time > self.serial.read_timeout * 2 * 10 ** 9:
+                break
 
             if len(mHex) == 0 and flag:
                 break
+        # print(sstr)
 
+        # TODO:age 6 ta bod yani errore v error handle konim
         # TODO:bayad vase tak tak ina handle bezarim k age errori dadi befahmim
-
-        response_data, response_flag = self.decode_data(sstr)
+        logging_system.insert(0, "read serial inverter ", send_address=address, receive_address=sstr)
+        response_data, response_flag = self.decode_data(sstr, address)
         return response_data, response_flag
         # id, RW, data, total = self.extract_data(response_data)
         # id, RW, address_data, total, length = self.extract_address(address)
@@ -93,14 +116,15 @@ class InverterBaseModel:
 
         # return self.convert_response_data('0x' + address_data, '0x' + data)
 
-    def decode_data(self, data: str) -> tuple[str, bool]:
+    def decode_data(self, data: str, address: str) -> tuple[str, bool]:
         if self.normal_response_char in data:
             flag = True
         elif self.bad_response_char in data:
             flag = False
         else:
-            print('inverte model decode', data)
+            print('inverter model decode', data, address)
             flag = False
+            logging_system.insert(2, 'inverter model decode', send_address=address, receive_address=data)
             # raise  # TODO:bayad raise ro doros konam k y error doros bede
 
         data = (data.replace(self.start_char, '').replace(self.end_char, '').
@@ -109,6 +133,7 @@ class InverterBaseModel:
 
     def test_com(self):
         if self.serial.ser.port == '':
+            logging_system.insert(2, "test com ", error="serial com not set")
             self.connect_flag = False
             return False
 
@@ -116,9 +141,12 @@ class InverterBaseModel:
             return False
         else:
             try:
+                # TODO:rah eftezah cherti baraye check kardam com darim
                 self.readSerial('01R00001A4')
                 return True
-            except:
+            except Exception as e:
+                logging_system.insert(2, "test com try open com", error=str(e))
+                print("test com try open com", str(e))
                 self.connect_flag = False
                 return False
 

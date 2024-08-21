@@ -1,6 +1,7 @@
 import serial
 import binascii
 from time import sleep, time, time_ns
+from MainCode import logging_system
 
 
 class SerialModel:
@@ -14,29 +15,26 @@ class SerialModel:
         self.ser.parity = serial.PARITY_NONE
         self.ser.rtscts = 0
         self.ser.timeout = 0.05  # momkene to baghie system haw fargh dashte bashe bayad y hodod barash peida konim
-        self.read_timeout = 1
+        self.read_timeout = 0.5
         # self.open()  # TODO: in bayad bere dakhele plc k azesh ino seda mizane
 
     def open(self) -> bool:
-        # if self.start_char == '':
-        #     return False
-        # if self.end_char == '':
-        #     return False
         if self.ser.is_open:
+            logging_system.insert(2, "open serial com", description="should not come here")
             return True
+
         try:
+            logging_system.insert(0, "trying open serial com " + str(self.ser.port))
             self.ser.open()
             return True
         except Exception as e:
+            logging_system.insert(2, "error in trying open serial com " + str(self.ser.port), error=str(e))
             return False
 
     def close(self) -> bool:
+        logging_system.insert(0, "trying closing serial com " + str(self.ser.port))
         self.ser.close()
         return True
-
-    def convert_response_data(self, address: str, byte: str) -> str:
-        pass
-        # return db.get_response(address, byte)['discreption']
 
     def extract_data(self, response_data):
         id = response_data[0:2]

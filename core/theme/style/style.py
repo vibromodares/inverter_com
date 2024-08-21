@@ -48,3 +48,12 @@ inverter_unknown_stylesheet = "background-color: rgb(255, 85, 0);"
 inverter_disconnect_stylesheet = "background-color: rgb(255, 0, 0);"
 inverter_connect_stylesheet = "background-color: rgb(0, 255, 127);"
 ui_line_style = "color: rgb(0, 255, 127);"
+no_error_label = 'color: white;background-color: green;'
+yes_error_label = 'color: white;background-color: red;'
+
+start_inverter_pb_style = "QPushButton {background-color: " + start_trading_pb_bg_color + ";" + "color: " + \
+                          pb_text_color_active + ";border-radius: 7;height : 30px;font: 9pt;} QPushButton:hover {background-color: " + \
+                          hover_start_trading_pb_bg_color + ";}"
+stop_inverter_pb_style = "QPushButton {background-color: " + stop_trading_pb_bg_color + ";" + "color: " + \
+                         pb_text_color_active + ";border-radius: 7;height : 30px;font: 9pt;} QPushButton:hover {background-color: " + \
+                         hover_stop_trading_pb_bg_color + ";}"

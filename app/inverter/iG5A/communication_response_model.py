@@ -1,3 +1,5 @@
+from typing import Optional
+
 from app.database.model.database_model import DataModel
 
 
@@ -15,7 +17,7 @@ class CommunicationResponse:
     have_allotment: bool
     true_value: float
 
-    def __init__(self, code: str, range_in: str, response_data: str, db: DataModel, have_allotment: bool = True,
+    def __init__(self, code: str, range_in: str, response_data: str, db: Optional[DataModel], have_allotment: bool = True,
                  scale: int = -1, unit: str = ''):
         self.code = code
 
@@ -24,6 +26,9 @@ class CommunicationResponse:
         self.scale = scale
         self.have_allotment = have_allotment
         self.true_value = 0
+
+        if self.db is None:
+            return
 
         self.range_in = range_in
         self.range_start = int(range_in[0], 16)
@@ -61,7 +66,7 @@ class CommunicationResponse:
                 self.description = self.response['description']
         else:
             self.description = str(int(self.response_data_in, 16) * float(self.scale)) + ' ' + self.unit
-            self.true_value=int(self.response_data_in, 16) * float(self.scale)
+            self.true_value = int(self.response_data_in, 16) * float(self.scale)
 
     def __repr__(self):
         # return "CR(" + self.code + ", " + self.range_in + ", " + self.response_data + ", " + self.description + ")"

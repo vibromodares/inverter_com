@@ -1,22 +1,20 @@
+import os
 from datetime import datetime
 from time import sleep
 
 from PyQt5 import uic
-from PyQt5.QtCore import Qt, QObject, QDateTime, QTimer
-from PyQt5.QtGui import QIcon, QFont, QIntValidator, QPainter, QColor
-from PyQt5.QtWidgets import QLabel, QPushButton, QDesktopWidget, QHBoxLayout, QVBoxLayout, QSpinBox, QComboBox, \
-    QWidget, QFrame, QRadioButton, QLineEdit, QMessageBox, QCheckBox, QGridLayout, QGroupBox, QTabWidget, QSizePolicy, \
-    QTableWidget, QTextEdit, QDateTimeEdit, QSlider, QScrollBar, QDial, QProgressBar
-
-from queue import Queue
+from PyQt5.QtCore import Qt, QObject
+from PyQt5.QtGui import QIcon, QIntValidator
+from PyQt5.QtWidgets import QLabel, QPushButton, QDesktopWidget, QVBoxLayout, QComboBox, QWidget, QFrame, QRadioButton, \
+    QTableWidget
 
 from MainCode import path
 from app.acc_meter.model.AccMeterModel import AccMeterModel
 from app.controller.model.ControllerModel import ControllerModel
-from app.database.api.api import get_all_module, get_module_model, get_device_by_id
+from app.database.api.api import get_module_model, get_device_by_id
 from app.gnd_center.model.GNDCenterModel import GNDCenterModel
 from app.inverter.iG5A.iG5AModel_new import iG5AModel
-from app.inverter.ui.iG5A_ui_model import iG5A_UI
+from app.logging.model.log_view_model import LogViewModel
 from app.motor.model.MotorModel import MotorModel
 from app.plant.model.PlantModel import PlantModel
 from app.speed_meter.model.SpeedMeterModel import SpeedMeterModel
@@ -25,10 +23,6 @@ from core.theme.style.style import close_pb_style
 
 
 class MainUi(QFrame):
-    time_comboBox: QComboBox
-    # aggressive_strategy_radioButton: QRadioButton
-    optimal_strategy_radioButton: QRadioButton
-
     onlyInt: QIntValidator = QIntValidator(1, 100)
     tab_main: QWidget
 
@@ -58,6 +52,9 @@ class MainUi(QFrame):
     spd_meter_ui_pb: QPushButton
     controller_ui_pb: QPushButton
 
+    help_ui_pb: QPushButton
+    user_manual_pb: QPushButton
+
     motor: MotorModel
     gnd_center: GNDCenterModel
     plant: PlantModel
@@ -67,10 +64,12 @@ class MainUi(QFrame):
 
     module: iG5AModel
 
-    # TODO:in bayad besheb grid fekr konam bayad checkesh konam
     verticalLayout_inverter: QVBoxLayout
 
-    # telegram_send_queue: Queue[list[int, str]]
+    log_tableWidget: QTableWidget
+    log_view_model:LogViewModel
+    type_comboBox: QComboBox
+
 
     def __init__(self):
         super(MainUi, self).__init__()
@@ -107,8 +106,6 @@ class MainUi(QFrame):
         from core.theme.pic import Pics
 
         self.tab_main = self.findChild(QWidget, "Main")
-        self.tab_trade_status = self.findChild(QWidget, "trade_status")
-        self.tab_setting = self.findChild(QWidget, "Setting")
         self.start_service_pb = self.findChild(QPushButton, "start_service_pb")
         self.stop_service_pb = self.findChild(QPushButton, "stop_service_pb")
 
@@ -136,6 +133,17 @@ class MainUi(QFrame):
 
         self.verticalLayout_inverter: QVBoxLayout = self.findChild(QVBoxLayout, "verticalLayout_inverter")
 
+        self.log_tableWidget: QTableWidget = self.findChild(QTableWidget, "log_tableWidget")
+        self.type_comboBox: QComboBox = self.findChild(QComboBox, "type_comboBox")
+
+        self.user_manual_pb = self.findChild(QPushButton, "user_manual_pb")
+        self.user_manual_pb.clicked.connect(self.open_user_manual)
+
+        self.help_ui_pb = self.findChild(QPushButton, "help_ui_pb")
+        self.help_ui_pb.clicked.connect(self.open_help_ui)
+
+        self.log_view_model = LogViewModel(self.log_tableWidget, self.type_comboBox)
+
         self.motor = MotorModel()
         self.gnd_center = GNDCenterModel()
         self.plant = PlantModel()
@@ -146,9 +154,7 @@ class MainUi(QFrame):
         #   Start Colors
         from core.theme.color.color import tab_selected_bg_color, tab_selected_text_color
 
-        from core.theme.style.style import active_pb_style, label_style, \
-            balance_label_style, line_edit_style, line_edit_prop_style, optimal_strategy_rb_style, \
-            optimal_strategy_label_style, ui_line_style, start_service_pb_style, stop_service_pb_style
+        from core.theme.style.style import ui_line_style, start_service_pb_style, stop_service_pb_style
 
         # stylesheet = "QTabBar::tab:selected {background-color: " + tab_selected_bg_color + ";" + \
         #              "color: " + tab_selected_text_color + ";font-size: 8pt;}" + \
@@ -402,13 +408,8 @@ class MainUi(QFrame):
         """
             starting the main trade thread
         """
-        # self.stop_service_pb.hide()
-        # self.stop_service_pb.setEnabled(False)
-        # self.main_trading_thread.stop_main_thread()
         self.module.stop()
 
-        while self.module.read_operating_status() != 0:
-            sleep(0.1)
         # self.module.stop_com()
         # self.start_service_pb.setEnabled(True)
 
@@ -451,3 +452,19 @@ class MainUi(QFrame):
             splash_screen.show_message("closing trade " + trade.trade.currency_disp())
             trade.thread.join()
             splash_screen.add_saved_text("trade " + trade.trade.currency_disp() + " closed!")
+
+    def open_user_manual(self):
+        file_name = "files/help/user_manual.pdf"
+        file_name = os.path.join(path, file_name)
+        try:
+            os.startfile(file_name)
+        except Exception as e:
+            print(e)
+
+    def open_help_ui(self):
+        file_name = "files/help/user_manual.pdf"
+        file_name = os.path.join(path, file_name)
+        try:
+            os.startfile(file_name)
+        except Exception as e:
+            print(e)

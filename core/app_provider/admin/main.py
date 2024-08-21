@@ -6,6 +6,7 @@ from typing import Callable
 
 import singleton
 from MainCode import path
+from app.logging.model.log_model import LoggingModel
 # from core.config.Config import db_path, logout_time
 from core.model.MainUI import MainUi
 from core.model.SplashScreen import SplashScreen

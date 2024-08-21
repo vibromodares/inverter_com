@@ -96,6 +96,11 @@
         <height>60</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>motor</string>
       </property>
@@ -108,6 +113,11 @@
         <width>150</width>
         <height>60</height>
        </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
       </property>
       <property name="text">
        <string>inverter</string>
@@ -122,6 +132,11 @@
         <height>60</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>structure</string>
       </property>
@@ -135,6 +150,11 @@
         <height>60</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>speed meter</string>
       </property>
@@ -147,6 +167,11 @@
         <width>150</width>
         <height>60</height>
        </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
       </property>
       <property name="text">
        <string>Acc meter</string>
@@ -335,6 +360,11 @@
         <height>60</height>
        </rect>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>controller</string>
       </property>
@@ -429,6 +459,118 @@
       </property>
       <property name="text">
        <string/>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="help_ui_pb">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>150</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>help</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="log">
+     <attribute name="title">
+      <string>log</string>
+     </attribute>
+     <widget class="QTableWidget" name="log_tableWidget">
+      <property name="geometry">
+       <rect>
+        <x>5</x>
+        <y>51</y>
+        <width>1011</width>
+        <height>671</height>
+       </rect>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="columnCount">
+       <number>0</number>
+      </property>
+      <attribute name="horizontalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+     </widget>
+     <widget class="QComboBox" name="type_comboBox">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>20</y>
+        <width>111</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <item>
+       <property name="text">
+        <string>all</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>error</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>warning</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>log</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QLabel" name="type_label">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>20</y>
+        <width>81</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color:white</string>
+      </property>
+      <property name="text">
+       <string>type</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="user_manual_pb">
+      <property name="geometry">
+       <rect>
+        <x>850</x>
+        <y>10</y>
+        <width>150</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>user manual</string>
       </property>
      </widget>
     </widget>
