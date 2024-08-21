@@ -3,4 +3,6 @@
 *.pyc
 
 .idea/
-files/logs
+files/logs/
+output/
+exe/

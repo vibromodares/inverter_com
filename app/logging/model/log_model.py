@@ -13,7 +13,7 @@ class LoggingModel:
     queue: Queue
     stop_thread_flag: bool = False
     insert_thread: Thread
-    database_db_path = './files/database/'
+    database_db_path = 'files/database/'
     database_file_name = 'log.json'
     log_table_name = 'log'
     error_table_name = 'error'
