@@ -47,17 +47,20 @@ class CommunicationResponse:
                 self.response = temp_response_1
             elif len(temp_response_2) != 0:
                 self.response = temp_response_2
-            elif self.response_data == '0000':
+            elif self.response_data == '0000' or self.response_data == '0':
                 temp_response_3 = self.db.get_responses('0x' + self.code, range_in=self.range_in)  # for Reserved
                 self.response = temp_response_3
             else:
                 self.response = []
 
             if len(self.response) == 0:
+                # print(temp_response_1)
+                # print(temp_response_2)
                 print(self.response)
                 print('cant find bad data response allotment', self.code, self.response_data, self.range_in)
 
             elif len(self.response) != 1:
+                print(len(self.response))
                 print(self.response)
                 print('bad data response allotment', self.code, self.response_data, self.range_in)
 

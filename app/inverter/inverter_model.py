@@ -59,7 +59,7 @@ class InverterBaseModel:
 
     def readSerial(self, address: str):
         # TODO:in bayad doros she bug ziad dare aval inke bayad time out dashte bashe baadam bayad yekisho tasmim begirim bezarim
-        logging_system.insert(0, "read serial inverter ", send_address=address)
+        logging_system.insert(0, "read serial inverter", send_address=address)
         byte = self.code_data(address)
 
         self.serial.ser.write(byte)
@@ -74,7 +74,7 @@ class InverterBaseModel:
 
             if sstr == '':
                 if mHex not in [bytes(self.normal_response_char, 'utf-8'), bytes(self.bad_response_char, 'utf-8')]:
-                    print("khar miad inja123")
+                    # print("khar miad inja123")
                     print("mHex = " + str(mHex))
                     logging_system.insert(2, "read serial check NRC BRC", send_address=address,
                                           description="mHex = " + str(mHex) + " sstr = " + sstr,
@@ -106,7 +106,7 @@ class InverterBaseModel:
 
         # TODO:age 6 ta bod yani errore v error handle konim
         # TODO:bayad vase tak tak ina handle bezarim k age errori dadi befahmim
-        logging_system.insert(0, "read serial inverter ", send_address=address, receive_address=sstr)
+        logging_system.insert(0, "read serial inverter", send_address=address, receive_address=sstr)
         response_data, response_flag = self.decode_data(sstr, address)
         return response_data, response_flag
         # id, RW, data, total = self.extract_data(response_data)
@@ -142,6 +142,7 @@ class InverterBaseModel:
         else:
             try:
                 # TODO:rah eftezah cherti baraye check kardam com darim
+                # TODO:asan 01 momkene nabashe yani inv numbert ma masalan 2 bashe
                 self.readSerial('01R00001A4')
                 return True
             except Exception as e:

@@ -17,8 +17,8 @@ config_db.drop_tables()
 config_db = TinyDB(config_db_path).table(config_table_name)
 
 
-# start  format Config
-time_format = '%Y-%m-%d %H:%M:%S'
+# start format Config
+time_format = '%Y-%m-%d %H:%M:%S:%f'
 config_db.insert({"time_format": str(time_format)})
 
 # Start  Developer Config

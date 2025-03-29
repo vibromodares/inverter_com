@@ -8,7 +8,7 @@ import serial.tools.list_ports
 from PyQt5.QtCore import QEvent, Qt
 from PyQt5.QtGui import QCloseEvent, QMouseEvent
 from PyQt5.QtWidgets import QPushButton, QWidget, QVBoxLayout, QLabel, QGridLayout, QComboBox, QLineEdit, QSpinBox, \
-    QDoubleSpinBox
+    QDoubleSpinBox, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView
 
 from MainCode import logging_system
 from app.database.api.api import get_module_by_id, get_db_by_model_id
@@ -30,6 +30,7 @@ class PopupiG5ARowModel(QWidget):
 
     def __init__(self, config: dict, send_queue: Queue):
         super().__init__()
+        self.last_data:int = 0
         self.config = config
         self.parent_id = config['parent_id']
         self.address = config['address']
@@ -52,19 +53,20 @@ class PopupiG5ARowModel(QWidget):
         self.refresh_rate = config['refresh_rate']
         self.logging_flag = config['logging']
         self.editable = config['editable']
+        self.logging_plot_type = config['logging_plot_type']
 
         self.last_update = datetime.now()
 
         if self.logging_flag == 1:
-            self.data_logger = DataLoggingModel(self.parameter)
+            self.data_logger = DataLoggingModel(self.parameter, logging_plot_type=self.logging_plot_type)
             self.data_logger.start_thread()
         else:
             self.data_logger = None
 
         self.send_queue = send_queue
-
         self.label = QLabel(self.parameter)
 
+        # TODO:inja y done dashte bashim k dropdown baz beshe
         if self.editable == 0:
             # self.description_ui = QLabel(self.send_queue(self.code, cmd_in='R')[1])
             self.description_ui = QLabel('0')
@@ -83,7 +85,7 @@ class PopupiG5ARowModel(QWidget):
         self.description_ui.setFixedHeight(30)
 
     def update_ui(self, force: bool = False) -> None:
-        if self.could_update:
+        if self.could_update or self.logging_flag == 1:
             if not force:
                 if self.need_update:
                     if self.refresh_rate != -1:
@@ -92,11 +94,12 @@ class PopupiG5ARowModel(QWidget):
             else:
                 if self.important:
                     self.update_func()
+                # self.update_func()
 
     def update_func(self) -> None:
         self.send_queue.put(
             {'code': self.code, 'data_in': None, 'cmd_in': 'R', 'callback_func': self.update_description_ui,
-             'time': datetime.now()})
+             'time_send': datetime.now()})
 
         self.last_update = datetime.now()
 
@@ -105,13 +108,14 @@ class PopupiG5ARowModel(QWidget):
             self.could_update = False
         elif event.type() == QEvent.FocusOut:
             self.could_update = True
-        elif event.type() == QEvent.KeyRelease and event.key() == Qt.Key_Enter:
+        elif event.type() == QEvent.KeyRelease and event.key() in (Qt.Key_Enter, Qt.Key_Return):
             data_in = self.description_ui.value()
             data_in = int(data_in / self.scale)
             data_in = hex(data_in).split('x')[-1]
             data_in = self.fix_data(data_in)
             self.send_queue.put(
-                {'code': self.code, 'data_in': data_in, 'cmd_in': 'W', 'callback_func': None, 'time': datetime.now()})
+                {'code': self.code, 'data_in': data_in, 'cmd_in': 'W', 'callback_func': None,
+                 'time_send': datetime.now()})
 
         return super(PopupiG5ARowModel, self).eventFilter(obj, event)
 
@@ -125,7 +129,8 @@ class PopupiG5ARowModel(QWidget):
             return '0' + data_in
         return data_in
 
-    def update_description_ui(self, temp_re: list[CommunicationResponse]) -> None:
+    def update_description_ui(self, temp_re: list[CommunicationResponse], time_send, time_receive) -> None:
+
         if self.scale == -1:
             if self.function == 'operating_status':
                 temp_data = temp_re[2].description + ' ' + temp_re[3].description
@@ -136,15 +141,20 @@ class PopupiG5ARowModel(QWidget):
 
                 temp_data = ' '.join(descriptions)
         else:
-            temp_data = round(temp_re[0].true_value, 2)
+            if temp_re[0].db is None:
+                temp_data = self.last_data
+            else:
+                temp_data = round(temp_re[0].true_value, 2)
 
-        if self.editable == 0:
-            self.description_ui.setText(str(temp_data))
-        else:
-            self.description_ui.setValue(temp_data)
+        if self.could_update:
+            self.last_data = temp_data
+            if self.editable == 0:
+                self.description_ui.setText(str(temp_data))
+            else:
+                self.description_ui.setValue(temp_data)
 
         if self.logging_flag:
-            self.data_logger.insert(temp_data)
+            self.data_logger.insert(temp_data, time_send, time_receive)
 
     def close_thread(self):
         if self.logging_flag:
@@ -155,11 +165,12 @@ class PopupAdvancediG5AModel(QWidget):
     name: str
     show_flag: bool = False
     parameters_ui: list[PopupiG5ARowModel]
+    parameters_ui: QTableWidget
 
     def __init__(self, parameters_ui: list[PopupiG5ARowModel]):
         super().__init__()
 
-        self.setFixedWidth(500 * 4)
+        self.setFixedWidth(1200)
 
         self.parameters_ui = parameters_ui
 
@@ -167,17 +178,21 @@ class PopupAdvancediG5AModel(QWidget):
         self.setWindowTitle('iG5A ' + self.name)
         main_layout = QGridLayout()
 
-        n_show = len(self.parameters_ui)
+        # self.setFixedHeight((int(n_show / 4) + 1) * 50)
+        self.setFixedHeight(600)
 
-        self.setFixedHeight((int(n_show / 4) + 1) * 50)
+        # for index, ui in enumerate(self.parameters_ui):
+        #     main_layout.addWidget(ui.label, int(index / 4), index % 4 * 2 + 0)
+        #     main_layout.addWidget(ui.description_ui, int(index / 4), index % 4 * 2 + 1)
+        self.advance_table = QTableWidget()
+        self.advance_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        main_layout.addWidget(self.advance_table, 1, 1)
 
-        for index, ui in enumerate(self.parameters_ui):
-            main_layout.addWidget(ui.label, int(index / 4), index % 4 * 2 + 0)
-            main_layout.addWidget(ui.description_ui, int(index / 4), index % 4 * 2 + 1)
+        self.fill_advanced_table_ui()
 
-        self.close_pb = QPushButton('Close')
-        self.close_pb.clicked.connect(self.close)
-        main_layout.addWidget(self.close_pb, index + 1, 1, 1, 1)
+        # self.close_pb = QPushButton('Close')
+        # self.close_pb.clicked.connect(self.close)
+        # main_layout.addWidget(self.close_pb, 2 + 1, 1, 1, 1)
 
         self.setLayout(main_layout)
 
@@ -194,6 +209,9 @@ class PopupAdvancediG5AModel(QWidget):
                               description="show_flag : " + str(self.show_flag))
         if not self.show_flag:
             logging_system.insert(0, "iG5A advanced pop up ui display_info showing ui")
+            for ui in self.parameters_ui:
+                ui.update_ui()
+            self.fill_advanced_table_ui()
             self.show()
         else:
             self.raise_()
@@ -202,6 +220,27 @@ class PopupAdvancediG5AModel(QWidget):
 
     def closeEvent(self, event):
         self.close()
+
+    def fill_advanced_table_ui(self):
+        self.advance_table.clear()
+        n_show = len(self.parameters_ui)
+
+        self.advance_table.setColumnCount(2)
+        self.advance_table.setRowCount(n_show)
+
+        self.advance_table.setItem(0, 0, QTableWidgetItem("description"))
+        self.advance_table.setItem(0, 1, QTableWidgetItem("value"))
+
+        for index, ui in enumerate(self.parameters_ui):
+            self.advance_table.setItem(index + 1, 0, QTableWidgetItem(ui.label.text()))
+            self.advance_table.setItem(index + 1, 1, QTableWidgetItem(ui.description_ui.text()))
+
+        # self.advance_table.horizontalHeader().setStretchLastSection(True)
+        # self.advance_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        header = self.advance_table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        # header.setStretchLastSection(True)
+        pass
 
 
 class PopupiG5AModel(QWidget):
@@ -238,9 +277,10 @@ class PopupiG5AModel(QWidget):
         temp_parent_id = []
 
         for data_temp in self.data:
-            if data_temp['parent_id'] not in temp_parent_id:
-                temp_parent_id.append(data_temp['parent_id'])
-                self.parameters_ui.append(PopupiG5ARowModel(data_temp, send_queue))
+            if data_temp['important']:
+                if data_temp['parent_id'] not in temp_parent_id:
+                    temp_parent_id.append(data_temp['parent_id'])
+                    self.parameters_ui.append(PopupiG5ARowModel(data_temp, send_queue))
 
         self.advanced_pop_up = PopupAdvancediG5AModel(self.parameters_ui)
 
@@ -382,9 +422,18 @@ class PopupiG5ASetupModel(QWidget):
         com = text.split(':')[0]
         # self.parent_com_changed(com)
 
-    def apply_func(self):
+    def get_com_from_combo(self) -> str:
+        """
+            get COM from combo
+        :return:
+            return come: str
+        """
         text = self.com_combo_box.currentText()
         com = text.split(':')[0]
+        return com
+
+    def apply_func(self):
+        com = self.get_com_from_combo()
         self.parent_com_changed(com)
 
     def get_combo_list_current(self):
@@ -469,8 +518,10 @@ class iG5AModel(InverterBaseModel):
         self.ui_layout = None
         self.setup_flag = False
         self.ui_need_update = False
+
         self.popup_ui = PopupiG5AModel(self.disconnect_com, self.start, self.stop, self.db.get_all_data(),
                                        self.send_queue)
+
         self.popup_ui.name = self.model + str(self.inverter_id)
         self.popup_ui.setWindowTitle(self.popup_ui.name)
         self.setup_ui = PopupiG5ASetupModel()
@@ -534,16 +585,19 @@ class iG5AModel(InverterBaseModel):
 
         self.popup_ui.close()
 
-        self.connect_flag = False
-        self.setup_flag = False
+        self.stop_command()
         self.stop_thread = True
 
-        self.stop_command()
         self.Thread.join()
+
+        self.connect_flag = False
+        self.setup_flag = False
 
         self.popup_ui.close_all()
 
         self.ui_pb.setStyleSheet(inverter_unknown_stylesheet)
+
+        self.close_com()
 
     def start(self):
         self.stop_thread = False
@@ -564,18 +618,22 @@ class iG5AModel(InverterBaseModel):
         # self.Thread.join()
 
     def start_command(self):
+        # TODO:inam alan moshkelesh ineke code hard code has
         start_code = '0382'
         forward_code = '0001'
 
         self.send_queue.put(
-            {'code': start_code, 'data_in': forward_code, 'cmd_in': 'W', 'callback_func': None, 'time': datetime.now()})
+            {'code': start_code, 'data_in': forward_code, 'cmd_in': 'W', 'callback_func': None,
+             'time_send': datetime.now()})
 
     def stop_command(self):
+        # TODO:inam alan moshkelesh ineke code hard code has
         start_code = '0382'
         reverse_code = '0000'
 
         self.send_queue.put(
-            {'code': start_code, 'data_in': reverse_code, 'cmd_in': 'W', 'callback_func': None, 'time': datetime.now()})
+            {'code': start_code, 'data_in': reverse_code, 'cmd_in': 'W', 'callback_func': None,
+             'time_send': datetime.now()})
 
     def extract_data(self, response_data):
         # TODO:in ghalate dg in bayad doros she
@@ -599,6 +657,7 @@ class iG5AModel(InverterBaseModel):
                 self.add_hex(self.convert_str_to_ascii(device_num + cmd + code + num_byte + data)))
 
     def get_drive_number(self) -> str:
+        # TODO:in ghalate in addade fekr konam dar asl y hex has
         if self.drive_number > 100:
             raise
         elif self.drive_number > 10:
@@ -610,6 +669,7 @@ class iG5AModel(InverterBaseModel):
         return f"iG5AModel({self.inverter_id}, {self.drive_number}, {self.model})"
 
     def get_cmd(self, code: str) -> str:
+        # TODO:in bayad kh kh sari doros beshe
         if code in ['0382', '0380', '0383', '0384']:
             return 'W'
         else:
@@ -637,6 +697,7 @@ class iG5AModel(InverterBaseModel):
         sum = self.cal_sum(code, cmd, data_in)
         num_byte = self.get_byte(code)
         device_num = self.get_drive_number()
+
         if data_in is None:
             final_address = device_num + cmd + code + num_byte + sum
         else:
@@ -652,7 +713,8 @@ class iG5AModel(InverterBaseModel):
         except Exception as e:
             print("read serial except ", e, "send_address = ", final_address)
             logging_system.insert(2, "read serial except", send_address=final_address, error=str(e))
-            # self.connect_flag = False
+            print('set connect_flag to False')
+            self.connect_flag = False
             return False, [CommunicationResponse(code, '0000', '', None)]
 
         if not flag:
@@ -730,13 +792,18 @@ class iG5AModel(InverterBaseModel):
     def main_thread(self, stop_thread: Callable[[], bool]) -> None:
         while True:
             try:
-                send_object = self.send_queue.get(block=False)
+                # if not self.connect_flag:
+                #     print("tashkhis dade k disconnect kone")
+                #     self.disconnect_com()
+
+                send_object = self.send_queue.get(block=False)  # chon on paien code darim bayad run beshe
+                # send_object = self.send_queue.get(timeout=1)
 
                 code = send_object['code']
                 data_in = send_object['data_in']
                 cmd_in = send_object['cmd_in']
                 callback_func = send_object['callback_func']
-                time = send_object['time']  # TODO:
+                time_send = send_object['time_send']
 
                 if data_in is None:
                     temp_re = self.read_serial(code, cmd_in=cmd_in)
@@ -745,14 +812,16 @@ class iG5AModel(InverterBaseModel):
 
                 if callback_func is not None:
                     temp_re = temp_re[1]
-                    callback_func(temp_re)
+                    callback_func(temp_re, time_send, datetime.now())
 
                 self.send_queue.task_done()
 
             except Empty:
                 if stop_thread():
+                    print("empty main thread")
                     print("stop iG5A model main thread")
                     break
+                sleep(self.refresh_rate / 4)
             except Exception as error:
                 print(error)
 
@@ -768,9 +837,8 @@ class iG5AModel(InverterBaseModel):
                 #
                 # if stop_thread():
                 #     break
-                # sleep(0.1)
 
-            if self.popup_ui.error_label.text() != "no error":
+            if self.popup_ui.error_label.text() != "Ready":
                 if (datetime.now() - self.error_time).total_seconds() > self.error_shade_time:
                     self.set_error_ui("")
 
@@ -803,8 +871,11 @@ class iG5AModel(InverterBaseModel):
 
         if text == "":
             self.popup_ui.error_label.setStyleSheet(no_error_label)
-            text = "no error"
+            text = "Ready"
         else:
             self.popup_ui.error_label.setStyleSheet(yes_error_label)
 
         self.popup_ui.error_label.setText(text)
+
+    def close_com(self):
+        self.serial.close()

@@ -9,6 +9,7 @@ from MainCode import path
 UserICO: QPixmap = QPixmap(path + "core/theme/pic/pic/user.png")
 passwordICO: QPixmap = QPixmap(path + "core/theme/pic/pic/password.png")
 Logo: QPixmap = QPixmap(path + "core/theme/pic/pic/logo.png")
+insert_db: QPixmap = QPixmap(path + "core/theme/pic/pic/insert_db.png")
 # ON: QIcon = QIcon(QPixmap(path + "core/theme/pic/pic/ON.png"))
 # OFF: QIcon = QIcon(QPixmap(path + "core/theme/pic/pic/OFF.png"))
 # checkMark: QPixmap = checkMark.scaled(30, 30, Qt.KeepAspectRatio)
