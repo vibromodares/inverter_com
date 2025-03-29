@@ -8,10 +8,11 @@ from PyQt5.QtGui import QIcon, QIntValidator
 from PyQt5.QtWidgets import QLabel, QPushButton, QDesktopWidget, QVBoxLayout, QComboBox, QWidget, QFrame, QRadioButton, \
     QTableWidget
 
-from MainCode import path
+from MainCode import path, logging_system
+from app.ResourcePath.app_provider.admin.main import resource_path
 from app.acc_meter.model.AccMeterModel import AccMeterModel
 from app.controller.model.ControllerModel import ControllerModel
-from app.database.api.api import get_module_model, get_device_by_id
+from app.database.api.api import get_module_model, get_device_by_id, get_all_module
 from app.gnd_center.model.GNDCenterModel import GNDCenterModel
 from app.inverter.iG5A.iG5AModel_new import iG5AModel
 from app.logging.model.log_view_model import LogViewModel
@@ -67,14 +68,16 @@ class MainUi(QFrame):
     verticalLayout_inverter: QVBoxLayout
 
     log_tableWidget: QTableWidget
-    log_view_model:LogViewModel
+    log_view_model: LogViewModel
     type_comboBox: QComboBox
-
+    inverter_comboBox: QComboBox
 
     def __init__(self):
         super(MainUi, self).__init__()
 
         uic.loadUi(path + "core/theme/ui/main.ui", self)
+
+        # logging_system.insert(0, "iG5A start")
 
         self.setWindowTitle("vibro modaress")
         self.setWindowIcon(QIcon(path + "core/theme/icons/logo.ico"))
@@ -177,7 +180,22 @@ class MainUi(QFrame):
         #   End Colors
 
         # modules = get_all_module()
-        self.module = get_device_by_id(1)
+        self.inverter_comboBox = self.findChild(QComboBox, "inverter_comboBox")
+        self.inverter_comboBox.clear()
+        # combo_items, current_index = self.get_combo_list_current()
+        combo_items = []
+        for i in get_all_module():
+            combo_items.append("{}: drv: {} {} ".format(i['name'], i['drive_number'], i['com_port']))
+
+        self.inverter_comboBox.addItems(combo_items)
+        self.inverter_comboBox.adjustSize()
+        # self.com_combo_box.textActivated.connect(self.change_com)
+        #
+        # self.com_combo_box.setCurrentIndex(current_index)
+
+        self.restart_module()
+        # self.reset_device_pb = self.findChild(QPushButton, "reset_device_pb")
+        # self.reset_device_pb.clicked.connect(self.restart_module)
         # trades.remove(get_trading(12))
         # trades = [get_trading(11)]
 
@@ -329,6 +347,10 @@ class MainUi(QFrame):
         #
         # self.Sensor_Status.Sensor_Submit_pb = self.Sensor_Status.findChild(QPushButton, "Sensor_Submit_pb")
 
+    def restart_module(self):
+        self.module = get_device_by_id(1)
+        self.module.ui_setter(self.inverter_ui_pb)
+
     def add_module_to_ui(self, module: dict) -> None:
         """
         add trade QH to vertical layout
@@ -455,15 +477,15 @@ class MainUi(QFrame):
 
     def open_user_manual(self):
         file_name = "files/help/user_manual.pdf"
-        file_name = os.path.join(path, file_name)
+        file_name = resource_path(file_name)
         try:
             os.startfile(file_name)
         except Exception as e:
             print(e)
 
     def open_help_ui(self):
-        file_name = "files/help/user_manual.pdf"
-        file_name = os.path.join(path, file_name)
+        file_name = "files/help/help.pdf"
+        file_name = resource_path(file_name)
         try:
             os.startfile(file_name)
         except Exception as e:

@@ -60,3 +60,6 @@ start_splash_font_size = 12  # start splash text font
 close_splash_align = PyQt5.QtCore.Qt.AlignHCenter | PyQt5.QtCore.Qt.AlignVCenter  # end splash text alignment
 close_splash_color = QColor(190, 105, 40)  # end splash text color
 end_splash_font_size = 15  # end splash text font
+
+make_db_bg: str = "rgba({r}, {g}, {b}, {a})".format(r=53, g=62, b=81, a=255)  # make db background color
+make_db_text_color: str = "rgba({r}, {g}, {b}, {a})".format(r=125, g=207, b=182, a=255)  # make db Text color

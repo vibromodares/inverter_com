@@ -38,7 +38,7 @@ class LogViewModel:
         if row_count > 100:
             data = data[-100:]
             row_count = len(data)
-
+        # TODO:inja data khondan ro bayad doros konam k dakhele queue bere
         self.log_tableWidget.setColumnCount(7)
         self.log_tableWidget.setRowCount(row_count)
 

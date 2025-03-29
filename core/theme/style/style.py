@@ -4,7 +4,7 @@ from core.theme.color.color import pb_text_color_active, line_edit_bg, line_edit
     trade_on_text_color, trade_off_text_color, trade_off_bg_color, trade_none_bg_color, trade_none_text_color, \
     login_forget_pb_bg, login_forget_pb_text, stop_trading_pb_bg_color, login_enter_pb_text, balance_label_text_color, \
     start_trading_pb_bg_color, login_enter_pb_bg, activate_account_pb_bg_color, hover_start_trading_pb_bg_color, \
-    hover_stop_trading_pb_bg_color
+    hover_stop_trading_pb_bg_color, make_db_bg, make_db_text_color
 
 line_edit_style = "background-color: " + line_edit_bg + ";color: " + line_edit_text_color + ";border-radius: 7;"
 line_edit_prop_style = "background-color: " + line_edit_bg + ";color: rgba(70, 240, 60, 255);"
@@ -57,3 +57,37 @@ start_inverter_pb_style = "QPushButton {background-color: " + start_trading_pb_b
 stop_inverter_pb_style = "QPushButton {background-color: " + stop_trading_pb_bg_color + ";" + "color: " + \
                          pb_text_color_active + ";border-radius: 7;height : 30px;font: 9pt;} QPushButton:hover {background-color: " + \
                          hover_stop_trading_pb_bg_color + ";}"
+
+progress_bar_style = '''
+#RedProgressBar {
+    text-align: center;
+    background-color: #E0E0E0;
+}
+#RedProgressBar::chunk {
+    background-color: #F44336;
+        width: 10px; 
+    margin: 0.5px;
+}
+#GreenProgressBar {
+    min-height: 12px;
+    max-height: 12px;
+    border-radius: 6px;
+}
+#GreenProgressBar::chunk {
+    border-radius: 6px;
+    background-color: #009688;
+}
+#BlueProgressBar {
+    text-align: center;
+    border: 2px solid #2196F3;
+    border-radius: 5px;
+}
+#BlueProgressBar::chunk {
+    background-color: #2196F3;
+}
+'''
+
+progress_bar_format = "data insert  {percentage:.2f}% ({inserted} /{total})"
+progress_bar_finished_format = "data insert finished"
+
+make_db_stylesheet = "background-color: " + make_db_bg + ";color: " + make_db_text_color + ";MakeDBUIModel {background: #002025;border-radius: 20px;opacity: 100;border: 2px solid #ff2025;}"

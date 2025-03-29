@@ -1,3 +1,6 @@
+import os
+
+from app.ResourcePath.app_provider.admin.main import resource_path
 from datetime import datetime
 from queue import Queue, Empty
 from threading import Thread
@@ -13,14 +16,17 @@ class LoggingModel:
     queue: Queue
     stop_thread_flag: bool = False
     insert_thread: Thread
-    database_db_path = 'files/database/'
+    database_db_path = './files/logs/'
     database_file_name = 'log.json'
     log_table_name = 'log'
     error_table_name = 'error'
 
     def __init__(self, log_path: str = database_db_path) -> None:
         self.queue = Queue()
-        self.log_path = log_path
+        # log_path_main = os.path.join(path, "files/logs/")
+        os.makedirs(resource_path(log_path), exist_ok=True)
+        self.log_path = resource_path(log_path)
+
         self.stop_thread_flag = False
         self.insert_thread = Thread(target=self.insert_database_thread, args=(lambda: self.stop_thread_flag,))
         self.db = TinyDB(self.log_path + self.database_file_name)

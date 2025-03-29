@@ -17,6 +17,10 @@ from core.theme.pic import Pics
 
 
 class Main:
+    Thread: Thread
+    main_ui: MainUi
+    start_flag:bool = False
+
     def __init__(self):
         super().__init__()
         self.start_splash = SplashScreen(path + "core/theme/pic/pic/start_splash.png", 500)
@@ -30,7 +34,6 @@ class Main:
         self.close_splash.color = close_splash_color
         self.close_splash.set_font(end_splash_font_size)
 
-        self.start_splash.show()
         # self.State_Render = False
         # self.State_PLC = False
         self.stopCheckThread = False
@@ -41,12 +44,27 @@ class Main:
         self.loginFlag = 0
         self.stop_Thread = False
 
-        self.Thread = Thread(target=self.main_thread, args=(lambda: self.stop_Thread,))
-
+        self.me = singleton.SingleInstance()
         self.create_db_path()
 
-        self.me = singleton.SingleInstance()
+
+        self.Thread = Thread(target=self.main_thread, args=(lambda: self.stop_Thread,))
+
+        from files.data.make_db import MakeDBUIModel
+        self.db_ui = MakeDBUIModel()
+        self.db_ui.handle_db()
+
         self.main_ui = MainUi()
+
+
+        self.starting_main_code()
+
+        self.run_thread()
+
+
+    def starting_main_code(self):
+        self.start_flag = True
+        self.start_splash.show()
 
         self.start_splash.show_message("\t\t initializing database connection")
 
@@ -63,14 +81,13 @@ class Main:
         #
         # self.start_splash.show_message("initializing DA units system")
 
-        self.run_thread()
-
         self.start_splash.finish(self.main_ui)
-        self.main_ui.show()
 
+        self.main_ui.show()
         self.main_ui.close_pb.clicked.connect(self.close)
 
     def main_thread(self, stop_thread: Callable[[], bool]) -> None:
+        temp_start = False
         while True:
             sleep(5)
             try:

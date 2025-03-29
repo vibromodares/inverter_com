@@ -5,7 +5,6 @@ from MainCode import logging_system
 
 
 class SerialModel:
-
     def __init__(self, port: str = '') -> None:
         self.ser = serial.Serial()
         self.ser.baudrate = 9600
